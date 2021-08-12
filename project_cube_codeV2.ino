@@ -253,7 +253,6 @@ void send_message()
     // send the current cell state to each of its neighbours
       uint8_t x = cell_state[k]*SCALE_VALUE+127; // convert into sendable format (i.e. cell_state of -10 --> 0 cells state of +10 --> 255)
       // send to each neighbour
-      Serial.print(x);
       Serial1.write(x);
       Serial2.write(x);
       Serial3.write(x);
@@ -286,8 +285,7 @@ int receive_neighbour_123(HardwareSerial& neighbour_serial, float* message, int 
         if(neighbour_serial.available()>0){
           uint8_t temp = (neighbour_serial.read()); 
           message[i] = ((int16_t)temp-127)/SCALE_VALUE;
-          Serial.println("temp");
-          Serial.println(temp);        
+       
         }
         else
         {
@@ -332,10 +330,8 @@ void update_message()
   //read the sent message in the correct order 
   now = millis();
   unsigned long check = now - prev; 
-  if((check > math_trigger) && (bottom_read == 1 or top_read == 1 or left_read == 1 or right_read == 1)){
+  if((check > math_trigger) && (bottom_read == 1 and top_read == 1)){
     
-    Serial.println("check");
-    Serial.print(check);
     prev = now;
     if(bottom_read == 1){Serial.println("up");
       for(int j = 0 ; j < amount_of_cell_info ; j++ ) {Serial.println(ReadFromBottomMessage[j]);}}
@@ -349,39 +345,42 @@ void update_message()
 
     // update the cell state part... 
     float sumA1[neural_network_parameter] = {0,0,0,0,0,0};
+    float sumA2[neural_network_parameter] = {0,0,0,0,0,0};
+    float sumA3[neural_network_parameter] = {0,0,0,0,0,0};
 
-
-    //for(int j = 0 ; j < neural_network_parameter ; j++ ) {
-    //  for(int i = 0 ; i < amount_of_cell_info ; i++ ) {
-    //      sumA1[j] += (perceive_kernel[1][1][i][j] * cell_state[i]); }}
+    for(int j = 0 ; j < neural_network_parameter ; j++ ) {
+      for(int i = 0 ; i < amount_of_cell_info ; i++ ) {
+          sumA1[j] += (perceive_kernel[1][1][i][j] * cell_state[i]); }}
 
 
     for(int j = 0 ; j < neural_network_parameter ; j++ ) {
       for(int i = 0 ; i < amount_of_cell_info ; i++ ) {
           sumA1[j] += (perceive_kernel[0][1][i][j] * ReadFromTopMessage[i]) ; }}
 
-    Serial.print("look at me katt!!!");
-    for(int j = 0 ; j < neural_network_parameter ; j++ ) {Serial.print(sumA1[j]);};    
-    delay(10000);
-
-    for(int j = 0 ; j < neural_network_parameter ; j++ ) {
-      for(int i = 0 ; i < amount_of_cell_info ; i++ ) {
-          sumA1[j] += (perceive_kernel[1][2][i][j] * ReadFromRightMessage[i]) ; }}
-
     for(int j = 0 ; j < neural_network_parameter ; j++ ) {
       for(int i = 0 ; i < amount_of_cell_info ; i++ ) {
           sumA1[j] += (perceive_kernel[2][1][i][j] *  ReadFromBottomMessage[i]) ; }}
 
+     
+
+    for(int j = 0 ; j < neural_network_parameter ; j++ ) {
+      for(int i = 0 ; i < amount_of_cell_info ; i++ ) {
+          sumA1[j] += (perceive_kernel[2][1][i][j] * ReadFromRightMessage[i]) ; }}
 
     for(int j = 0 ; j < neural_network_parameter ; j++ ) {
       for(int i = 0 ; i < amount_of_cell_info ; i++ ) {
           sumA1[j] += (perceive_kernel[1][0][i][j] *  ReadFromLeftMessage[i]) ; }}
 
+    
 
     for(int j = 0 ; j < neural_network_parameter ; j++ ) {sumA1[j] += perceive_bias[j];}
+    
+
+    
+    
     for(int j = 0 ; j < neural_network_parameter ; j++ ) {if(sumA1[j]<0){sumA1[j]=0;}}
-    Serial.println("first x");
-    for(int j = 0 ; j < neural_network_parameter ; j++ ) {Serial.println(sumA1[j]);}
+    
+    
 
 
     float sumB[neural_network_parameter] = {0,0,0,0,0,0};
@@ -398,9 +397,8 @@ void update_message()
         sumB[j] = 0;
       }
     }
-    Serial.println("second x");
-    for(int j = 0 ; j < neural_network_parameter ; j++ ) {Serial.println(sumB[j]);}
-
+    
+    
 
   float sumC[amount_of_cell_info] = {0,0,0,0,0,0,0,0,0,0,0};
 
@@ -410,9 +408,13 @@ void update_message()
     }
   }
 
-  for(int j = 0 ; j < amount_of_cell_info ; j++ ) {sumC[j] += dmodel_bias_2[j];}
-  Serial.print("sum c");
+  
+  Serial.print("ITS THIS BIT THATS NOT WORKING ANDRES...");
   for(int j = 0 ; j < amount_of_cell_info ; j++ ) {Serial.println(sumC[j]);}
+  delay(1000);
+
+  for(int j = 0 ; j < amount_of_cell_info ; j++ ) {sumC[j] += dmodel_bias_2[j];}
+  
  
   //for(int j = 0 ; j < amount_of_cell_info ; j++ ) {cell_state[j] += sumC[j];}
 
