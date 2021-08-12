@@ -41,7 +41,7 @@ float loop_count = 0;
 
           
 
-const float dmodel_kernel_2[6][11] = {{ 0.00702192, -0.0302443,   0.01429643, -0.22756426,  1.2955177,
+const float dmodel_kernel_2[6][11]  = {{ 0.00702192, -0.0302443,   0.01429643, -0.22756426,  1.2955177,
     0.00752916, -0.29012364,  0.08942816, -0.01615511,  0.06804911,
    -0.2836687},
   { 0.04007224,  1.3502132,   0.11379168, -0.31065598, -0.04229368,
@@ -205,9 +205,9 @@ const float perceive_kernel[3][3][11][6] = {{
 {-0., -0., -0., -0.,  0., -0.,}}}};
 
 
-float dmodel_bias_1[6] = {0.012902863,0.20334744,0.047111467,-0.04879921,0.11107109,-0.1389306};
-float dmodel_bias_2[11] = {-0.008380199,0.0010055156,-0.0015280047,0.057577252,0.002598451,-0.0008966971,0.056395955,-0.035218723,0.0014696647,-0.031519607,0.01778244};
-float perceive_bias[6] = {-0.06075142,0.0652175,0.11544124,-0.08911467,0.11749506,-0.11390978};
+PROGMEM const float dmodel_bias_1[6]  = {0.012902863,0.20334744,0.047111467,-0.04879921,0.11107109,-0.1389306};
+PROGMEM const float dmodel_bias_2[11]  = {-0.008380199,0.0010055156,-0.0015280047,0.057577252,0.002598451,-0.0008966971,0.056395955,-0.035218723,0.0014696647,-0.031519607,0.01778244};
+PROGMEM const float perceive_bias[6] = {-0.06075142,0.0652175,0.11544124,-0.08911467,0.11749506,-0.11390978};
 
 void setup() {
         Serial.begin(9600); // to pc
@@ -373,7 +373,7 @@ void update_message()
 
     
 
-    for(int j = 0 ; j < neural_network_parameter ; j++ ) {sumA1[j] += perceive_bias[j];}
+    for(int j = 0 ; j < neural_network_parameter ; j++ ) {sumA1[j] += (pgm_read_float_near(&perceive_bias[0] + j));}
     
 
     
@@ -392,29 +392,29 @@ void update_message()
 
 
     for(int j = 0 ; j < neural_network_parameter; j++ ) {
-      sumB[j] += dmodel_bias_1[j];
+      sumB[j] += (pgm_read_float_near(&dmodel_bias_1[0] + j));
       if(sumB[j]<0){
         sumB[j] = 0;
       }
     }
     
-    
+
 
   float sumC[amount_of_cell_info] = {0,0,0,0,0,0,0,0,0,0,0};
 
   for(int j = 0 ; j< amount_of_cell_info ; j++ ) {        
     for(int i = 0 ; i < neural_network_parameter; i++ ) {
-      sumC[j] =+ (sumB[i] *dmodel_kernel_2[i][j]);
+      sumC[j] += sumB[i] * dmodel_kernel_2[i][j];
     }
   }
-
   
-  Serial.print("ITS THIS BIT THATS NOT WORKING ANDRES...");
+ 
+
+  for(int j = 0 ; j < amount_of_cell_info ; j++ ) {sumC[j] += (pgm_read_float_near(&dmodel_bias_2[0] + j));}
+  
+  Serial.println("here!");
   for(int j = 0 ; j < amount_of_cell_info ; j++ ) {Serial.println(sumC[j]);}
   delay(1000);
-
-  for(int j = 0 ; j < amount_of_cell_info ; j++ ) {sumC[j] += dmodel_bias_2[j];}
-  
  
   //for(int j = 0 ; j < amount_of_cell_info ; j++ ) {cell_state[j] += sumC[j];}
 
