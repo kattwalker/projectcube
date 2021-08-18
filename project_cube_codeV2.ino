@@ -3,7 +3,7 @@
 #include <SoftwareSerial.h>
 #include <AltSoftSerial.h>
 
-SoftwareSerial Serial4(12, 13);
+SoftwareSerial Serial4(10, 11);
 
 void send_message();
 static const float SCALE_VALUE = 127; 
@@ -13,7 +13,7 @@ int receive_neighbour_4(SoftwareSerial& neighbour_serial, float* message, int re
 void update_message();
 unsigned long now = 0;
 unsigned long prev = 0;
-const unsigned long math_trigger = 50000;
+const unsigned long math_trigger = 5000;
 int amount_of_cell_info = 15;
 int neural_network_parameter = 40;
 
@@ -713,8 +713,11 @@ void send_message()
 void receieve_message()
 {
   bottom_read = receive_neighbour_123(Serial2,  ReadFromBottomMessage, bottom_read);
+
   top_read = receive_neighbour_123(Serial1,  ReadFromTopMessage, top_read);
+
   right_read = receive_neighbour_123(Serial3,  ReadFromRightMessage, right_read);
+
   left_read = receive_neighbour_4(Serial4, ReadFromLeftMessage, left_read);
 }
 
@@ -723,7 +726,6 @@ int receive_neighbour_123(HardwareSerial& neighbour_serial, float* message, int 
   ///////////////////////////////Read message !!!!!////////////////////////////////////
   // We are constantly checking for send data from each of the neighbours - also only read once per update  
   if(neighbour_serial.available()>0 && read_signal ==0){
-    
     int value = neighbour_serial.read(); // check for the header value - only start recording when you read this value
     
     if(value == 25){
@@ -749,17 +751,18 @@ int receive_neighbour_123(HardwareSerial& neighbour_serial, float* message, int 
 
 int receive_neighbour_4(SoftwareSerial& neighbour_serial, float* message, int read_signal)
 {
+  
   ///////////////////////////////Read message !!!!!////////////////////////////////////
   // We are constantly checking for send data from each of the neighbours - also only read once per update  
-  if(neighbour_serial.available()>0 && read_signal ==0){
-    
-    int value = neighbour_serial.read(); // check for the header value - only start recording when you read this value
+  if(Serial4.available()>0 && read_signal ==0){
+    Serial.println(" alao here!");
+    int value = Serial4.read(); // check for the header value - only start recording when you read this value
     if(value == 25){
       // if the header value is read, read the next 11 numbers, which is the neighbouring cell state.N.B. this needs to be converted back into 
       // the neural network weight format.
       for(int i = 0; i < amount_of_cell_info; i++){
-        if(neighbour_serial.available()>0){
-          uint8_t temp = (neighbour_serial.read()); 
+        if(Serial4.available()>0){
+          uint8_t temp = (Serial4.read()); 
           message[i] = ((int16_t)temp-127)/SCALE_VALUE;
          
         }
@@ -778,7 +781,7 @@ void update_message()
   //read the sent message in the correct order 
   now = millis();
   unsigned long check = now - prev; 
-  if((check > math_trigger) && (bottom_read == 1 or top_read == 1)){
+  if((check > math_trigger) && (bottom_read == 1 or top_read == 1 or left_read == 1 or right_read == 1)){
     
     prev = now;
     if(bottom_read == 1){Serial.println("up");
