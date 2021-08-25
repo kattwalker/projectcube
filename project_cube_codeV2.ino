@@ -6,14 +6,14 @@
 SoftwareSerial Serial4(10, 11);
 
 void send_message();
-static const float SCALE_VALUE = 127; 
+static const float SCALE_VALUE = 12.7; 
 void receieve_message();
 int receive_neighbour_123(HardwareSerial& neighbour_serial, float* message, int read_signal);
 int receive_neighbour_4(SoftwareSerial& neighbour_serial, float* message, int read_signal);
 void update_message();
 unsigned long now = 0;
 unsigned long prev = 0;
-const unsigned long math_trigger = 5000;
+const unsigned long math_trigger = 500;
 int amount_of_cell_info = 15;
 int neural_network_parameter = 40;
 
@@ -658,7 +658,7 @@ PROGMEM const float dmodel_bias_2[15]  = {0.02183328,-0.044273492,-0.012110343,-
 PROGMEM const float perceive_bias[40] = {0.030537171,0.04179521,-0.034147393,-0.012620558,0.0041902284,0.030705025,0.028250286,-0.0025205151,0.017727124,0.01005783,0.041590728,-0.0114766965,0.03215437,0.038724948,0.05805855,-0.0074059837,-0.0053902194,0.01935422,-0.08663503,0.039916087,0.0437605,0.05126975,0.029452205,0.050751057,-0.0012684441,-0.015251998,0.047365025,0.0081449,0.02040422,0.012763868,-0.028508976,0.0230172,-0.023475986,0.03449037,0.051923096,-0.011913723,-0.0069342074,0.024313584,-0.0033058159,0.05360153};
 
 void setup() {
-        Serial.begin(9600); // to pc
+        Serial.begin(9600);
         Serial1.begin(9600); //Left neighbour
         Serial2.begin(9600);// right neighbour
         Serial3.begin(9600); // top neighbour
@@ -672,13 +672,14 @@ void setup() {
 }
 
 void loop() { 
-         
+
+  for(int t=0; t<29;t++){       
   send_message();
-  delay(500);
   receieve_message();      
   update_message();
   }
-
+ }
+  
 
 void send_message()
 {
@@ -712,6 +713,7 @@ void send_message()
 
 void receieve_message()
 {
+
   bottom_read = receive_neighbour_123(Serial2,  ReadFromBottomMessage, bottom_read);
 
   top_read = receive_neighbour_123(Serial1,  ReadFromTopMessage, top_read);
@@ -719,6 +721,7 @@ void receieve_message()
   right_read = receive_neighbour_123(Serial3,  ReadFromRightMessage, right_read);
 
   left_read = receive_neighbour_4(Serial4, ReadFromLeftMessage, left_read);
+
 }
 
 int receive_neighbour_123(HardwareSerial& neighbour_serial, float* message, int read_signal)
@@ -739,7 +742,7 @@ int receive_neighbour_123(HardwareSerial& neighbour_serial, float* message, int 
         }
         else
         {
-          Serial.println("no data");
+          int a =1;
         }
       }
       // set bottom read to one, this neighbour has now been read
@@ -754,50 +757,47 @@ int receive_neighbour_4(SoftwareSerial& neighbour_serial, float* message, int re
   
   ///////////////////////////////Read message !!!!!////////////////////////////////////
   // We are constantly checking for send data from each of the neighbours - also only read once per update  
-  if(Serial4.available()>0 && read_signal ==0){
-    Serial.println(" alao here!");
-    int value = Serial4.read(); // check for the header value - only start recording when you read this value
+  if(neighbour_serial.available()>0 && read_signal ==0){
+    int value = neighbour_serial.read(); // check for the header value - only start recording when you read this value
+    
     if(value == 25){
       // if the header value is read, read the next 11 numbers, which is the neighbouring cell state.N.B. this needs to be converted back into 
       // the neural network weight format.
       for(int i = 0; i < amount_of_cell_info; i++){
-        if(Serial4.available()>0){
-          uint8_t temp = (Serial4.read()); 
+        if(neighbour_serial.available()>0){
+          uint8_t temp = (neighbour_serial.read()); 
           message[i] = ((int16_t)temp-127)/SCALE_VALUE;
-         
+       
+        }
+        else
+        {
+          int a =1;
         }
       }
       // set bottom read to one, this neighbour has now been read
       return 1;       
     }
   }
-  return 0;
+  return read_signal;
 }
 
 void update_message()
 {
 ////////////////////////// Update message ///////////////////////////////////////////
-  // we only attempt at update every 100th loop - this should give the algorithm enough time to
-  //read the sent message in the correct order 
+
   now = millis();
   unsigned long check = now - prev; 
-  if((check > math_trigger) && (bottom_read == 1 or top_read == 1 or left_read == 1 or right_read == 1)){
-    
+  int messages_recieved = bottom_read + top_read + left_read + right_read;
+  Serial.println(bottom_read + top_read);
+  if((check > math_trigger) and messages_recieved>0){
+ 
     prev = now;
-    if(bottom_read == 1){Serial.println("up");
-      for(int j = 0 ; j < amount_of_cell_info ; j++ ) {Serial.println(ReadFromBottomMessage[j]);}}
-    if(top_read == 1){Serial.println("down");
-      for(int j = 0 ; j < amount_of_cell_info ; j++ ) {Serial.println(ReadFromTopMessage[j]);}}
-    if(left_read == 1){Serial.println("left");
-      for(int j = 0 ; j < amount_of_cell_info ; j++ ) {Serial.println(ReadFromLeftMessage[j]);}}
-    if(right_read == 1){Serial.println("right");
-      for(int j = 0 ; j < amount_of_cell_info ; j++ ) {Serial.println(ReadFromRightMessage[j]);}}
+    analogWrite(red_light_pin, 0); analogWrite(green_light_pin,0); analogWrite(blue_light_pin, 0);
 
 
     // update the cell state part... 
     float sumA1[neural_network_parameter] = {0,0,0,0,0,0};
-    float sumA2[neural_network_parameter] = {0,0,0,0,0,0};
-    float sumA3[neural_network_parameter] = {0,0,0,0,0,0};
+  
 
     for(int j = 0 ; j < neural_network_parameter ; j++ ) {
       for(int i = 0 ; i < amount_of_cell_info ; i++ ) {
@@ -880,30 +880,27 @@ void update_message()
   int max_position = 0;
   for(int i=5; i<amount_of_cell_info; i++){
     // we can also print it for debugging...
-    Serial.print("me..");
-    Serial.println(cell_state[i]);
+
     if(cell_state[i]>max_num){
       max_num =cell_state[i]; 
-      max_position=i;
+      max_position=i-5;
     }
   }
 
   // set the light colour accordingly...
 
-  if(max_position==1){analogWrite(red_light_pin, 255); analogWrite(green_light_pin,0); analogWrite(blue_light_pin, 0);}
-  if(max_position==2){analogWrite(red_light_pin, 0); analogWrite(green_light_pin,255); analogWrite(blue_light_pin, 0);}
-  if(max_position==3){analogWrite(red_light_pin, 0); analogWrite(green_light_pin,0); analogWrite(blue_light_pin, 255);}
-  if(max_position==4){analogWrite(red_light_pin, 255); analogWrite(green_light_pin,255); analogWrite(blue_light_pin, 125);}
-  if(max_position==5){analogWrite(red_light_pin, 0); analogWrite(green_light_pin,255); analogWrite(blue_light_pin, 255);}
-  if(max_position==6){analogWrite(red_light_pin, 255); analogWrite(green_light_pin,0); analogWrite(blue_light_pin, 255);}
-  if(max_position==7){analogWrite(red_light_pin, 255); analogWrite(green_light_pin,255); analogWrite(blue_light_pin, 0);}
-  if(max_position==8){analogWrite(red_light_pin, 255); analogWrite(green_light_pin,255); analogWrite(blue_light_pin, 255);}
-  if(max_position==9){analogWrite(red_light_pin, 255); analogWrite(green_light_pin,125); analogWrite(blue_light_pin, 255);}
-  if(max_position==10){analogWrite(red_light_pin, 125); analogWrite(green_light_pin,255); analogWrite(blue_light_pin, 255);}
+  if(max_position==7){analogWrite(red_light_pin, 255); analogWrite(green_light_pin,0); analogWrite(blue_light_pin, 0);}
+  if(max_position==1){analogWrite(red_light_pin, 0); analogWrite(green_light_pin,255); analogWrite(blue_light_pin, 0);}
+  if(max_position==2){analogWrite(red_light_pin, 0); analogWrite(green_light_pin,0); analogWrite(blue_light_pin, 255);}
+  if(max_position==3){analogWrite(red_light_pin, 255); analogWrite(green_light_pin,255); analogWrite(blue_light_pin, 125);}
+  if(max_position==4){analogWrite(red_light_pin, 0); analogWrite(green_light_pin,255); analogWrite(blue_light_pin, 255);}
+  if(max_position==5){analogWrite(red_light_pin, 255); analogWrite(green_light_pin,0); analogWrite(blue_light_pin, 255);}
+  if(max_position==6){analogWrite(red_light_pin, 255); analogWrite(green_light_pin,255); analogWrite(blue_light_pin, 0);}
+  if(max_position==0){analogWrite(red_light_pin, 255); analogWrite(green_light_pin,255); analogWrite(blue_light_pin, 255);}
+  if(max_position==8){analogWrite(red_light_pin, 255); analogWrite(green_light_pin,125); analogWrite(blue_light_pin, 255);}
+  if(max_position==9){analogWrite(red_light_pin, 125); analogWrite(green_light_pin,255); analogWrite(blue_light_pin, 255);}
 
 
-  Serial.println("I think I am...");
-  Serial.println((max_position-5));
 
   // the update process is now completed - update each of the necessary parameters / reset the triggers...
   message_process_completed = 0;
