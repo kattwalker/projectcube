@@ -6,16 +6,17 @@
 SoftwareSerial Serial4(10, 11);
 
 void send_message();
-static const float SCALE_VALUE = 12.7; 
+static const float SCALE_VALUE = 100; 
 void receieve_message();
 int receive_neighbour_123(HardwareSerial& neighbour_serial, float* message, int read_signal);
 int receive_neighbour_4(SoftwareSerial& neighbour_serial, float* message, int read_signal);
 void update_message();
 unsigned long now = 0;
 unsigned long prev = 0;
-const unsigned long math_trigger = 500;
+const unsigned long math_trigger = 50000;
 int amount_of_cell_info = 15;
 int neural_network_parameter = 40;
+int update_num = 0;
 
 float cell_state[15] = {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
@@ -673,11 +674,12 @@ void setup() {
 
 void loop() { 
 
-  for(int t=0; t<29;t++){       
+        
   send_message();
+  delay(500);
   receieve_message();      
   update_message();
-  }
+  
  }
   
 
@@ -742,7 +744,7 @@ int receive_neighbour_123(HardwareSerial& neighbour_serial, float* message, int 
         }
         else
         {
-          int a =1;
+          Serial.print("no value");
         }
       }
       // set bottom read to one, this neighbour has now been read
@@ -766,12 +768,13 @@ int receive_neighbour_4(SoftwareSerial& neighbour_serial, float* message, int re
       for(int i = 0; i < amount_of_cell_info; i++){
         if(neighbour_serial.available()>0){
           uint8_t temp = (neighbour_serial.read()); 
+          Serial.println(temp);
           message[i] = ((int16_t)temp-127)/SCALE_VALUE;
        
         }
         else
         {
-          int a =1;
+          Serial.print("no value");
         }
       }
       // set bottom read to one, this neighbour has now been read
@@ -788,12 +791,16 @@ void update_message()
   now = millis();
   unsigned long check = now - prev; 
   int messages_recieved = bottom_read + top_read + left_read + right_read;
-  Serial.println(bottom_read + top_read);
   if((check > math_trigger) and messages_recieved>0){
  
     prev = now;
     analogWrite(red_light_pin, 0); analogWrite(green_light_pin,0); analogWrite(blue_light_pin, 0);
-
+    Serial.print("right");
+    for(int i = 0 ; i < amount_of_cell_info ; i++ ) {Serial.println(ReadFromRightMessage[i]);}
+    Serial.print("left");
+    for(int i = 0 ; i < amount_of_cell_info ; i++ ) {Serial.println(ReadFromLeftMessage[i]);}
+    Serial.print(" bottom");
+    for(int i = 0 ; i < amount_of_cell_info ; i++ ) {Serial.println(ReadFromBottomMessage[i]);}
 
     // update the cell state part... 
     float sumA1[neural_network_parameter] = {0,0,0,0,0,0};
@@ -870,8 +877,7 @@ void update_message()
   for(int j = 0 ; j < amount_of_cell_info ; j++ ) {sumC[j] += (pgm_read_float_near(&dmodel_bias_2[0] + j));}
   
 
- 
-  for(int j = 0 ; j < amount_of_cell_info ; j++ ) {cell_state[j] += sumC[j];}
+  for(int j = 0 ; j < amount_of_cell_info ; j++ ) {cell_state[j] += sumC[j]; Serial.print(cell_state[j]);}
 
 
   // now we find out which number the cell thinks it is...
@@ -909,6 +915,7 @@ void update_message()
   left_read = 0;
   right_read = 0;
   ready_to_update = 0;
+  update_num = update_num +1;
   for(int i=1; i<amount_of_cell_info; i++){
     ReadFromRightMessage[i] = 0;
     ReadFromTopMessage[i] = 0;
