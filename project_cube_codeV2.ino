@@ -13,7 +13,7 @@ int receive_neighbour_4(SoftwareSerial& neighbour_serial, float* message, int re
 void update_message();
 unsigned long now = 0;
 unsigned long prev = 0;
-const unsigned long math_trigger = 50000;
+const unsigned long math_trigger = 5000;
 int amount_of_cell_info = 15;
 int neural_network_parameter = 40;
 int update_num = 0;
@@ -39,6 +39,11 @@ int left_read = 0;
 int top_read =0;
 int ready_to_update = 0;
 float loop_count = 0;
+
+union Float2Byte{
+  float floatvar;
+  byte bytevar[4];
+  } float2byte;
 
           
 
@@ -674,9 +679,12 @@ void setup() {
 
 void loop() { 
 
-        
+  //while(Serial1.available()>65){Serial1.read();}
+  //while(Serial2.available()>65){Serial2.read();}
+  //while(Serial3.available()>65){Serial3.read();}
+  //while(Serial4.available()>65){Serial4.read();}
   send_message();
-  delay(500);
+  delay(700);
   receieve_message();      
   update_message();
   
@@ -702,12 +710,17 @@ void send_message()
 
     for (int k = 0; k < amount_of_cell_info; k++){
     // send the current cell state to each of its neighbours
-      uint8_t x = cell_state[k]*SCALE_VALUE+127; // convert into sendable format (i.e. cell_state of -10 --> 0 cells state of +10 --> 255)
-      // send to each neighbour
-      Serial1.write(x);
-      Serial2.write(x);
-      Serial3.write(x);
-      Serial4.write(x);}
+       // convert into sendable format (i.e. cell_state of -10 --> 0 cells state of +10 --> 255)
+      float x = cell_state[k];
+      float2byte.floatvar = x;
+      for(byte b=0; b<4; b++){
+        Serial1.write(float2byte.bytevar[b]);
+        Serial2.write(float2byte.bytevar[b]);
+        Serial3.write(float2byte.bytevar[b]);
+        Serial4.write(float2byte.bytevar[b]);
+        
+      }
+    }
 
     // set message sent trigger - actually this might be obsolete now ...
     message_sent = 1;}
@@ -715,7 +728,7 @@ void send_message()
 
 void receieve_message()
 {
-
+  
   bottom_read = receive_neighbour_123(Serial2,  ReadFromBottomMessage, bottom_read);
 
   top_read = receive_neighbour_123(Serial1,  ReadFromTopMessage, top_read);
@@ -730,57 +743,79 @@ int receive_neighbour_123(HardwareSerial& neighbour_serial, float* message, int 
 {
   ///////////////////////////////Read message !!!!!////////////////////////////////////
   // We are constantly checking for send data from each of the neighbours - also only read once per update  
-  if(neighbour_serial.available()>0 && read_signal ==0){
+  if(neighbour_serial.available()>0 and read_signal==0){
     int value = neighbour_serial.read(); // check for the header value - only start recording when you read this value
     
     if(value == 25){
       // if the header value is read, read the next 11 numbers, which is the neighbouring cell state.N.B. this needs to be converted back into 
       // the neural network weight format.
       for(int i = 0; i < amount_of_cell_info; i++){
-        if(neighbour_serial.available()>0){
-          uint8_t temp = (neighbour_serial.read()); 
-          message[i] = ((int16_t)temp-127)/SCALE_VALUE;
-       
+        if(neighbour_serial.available()>3){
+          for(byte b=0; b<4; b++){
+             byte temp = (neighbour_serial.read()); 
+             float2byte.bytevar[b] = temp;
+          }         
+          
+          message[i] = float2byte.floatvar;
+          if(isnan(message[i])){
+            message[i] = 0;
+            } 
         }
         else
         {
-          Serial.print("no value");
+          Serial.println("no value");       
         }
       }
       // set bottom read to one, this neighbour has now been read
       return 1;       
     }
   }
+  if(neighbour_serial.available()>0 && read_signal == 1){
+    while(neighbour_serial.available()>0){
+         neighbour_serial.read(); 
+         }
+    }
+    
   return read_signal;
 }
 
 int receive_neighbour_4(SoftwareSerial& neighbour_serial, float* message, int read_signal)
 {
-  
   ///////////////////////////////Read message !!!!!////////////////////////////////////
   // We are constantly checking for send data from each of the neighbours - also only read once per update  
-  if(neighbour_serial.available()>0 && read_signal ==0){
+  if(neighbour_serial.available()>0 and read_signal==0){
     int value = neighbour_serial.read(); // check for the header value - only start recording when you read this value
     
     if(value == 25){
       // if the header value is read, read the next 11 numbers, which is the neighbouring cell state.N.B. this needs to be converted back into 
       // the neural network weight format.
       for(int i = 0; i < amount_of_cell_info; i++){
-        if(neighbour_serial.available()>0){
-          uint8_t temp = (neighbour_serial.read()); 
-          Serial.println(temp);
-          message[i] = ((int16_t)temp-127)/SCALE_VALUE;
-       
+        if(neighbour_serial.available()>3){
+          for(byte b=0; b<4; b++){
+             byte temp = (neighbour_serial.read()); 
+             float2byte.bytevar[b] = temp;
+          }         
+          
+          message[i] = float2byte.floatvar;
+          if(isnan(message[i])){
+            message[i] = 0;
+            } 
         }
         else
         {
-          Serial.print("no value");
+          Serial.println("no value");       
         }
       }
       // set bottom read to one, this neighbour has now been read
       return 1;       
     }
   }
+  if(neighbour_serial.available()>0 && read_signal == 1){
+    while(neighbour_serial.available()>0){
+         neighbour_serial.read(); 
+         }
+    }
+    
   return read_signal;
 }
 
@@ -801,7 +836,10 @@ void update_message()
     for(int i = 0 ; i < amount_of_cell_info ; i++ ) {Serial.println(ReadFromLeftMessage[i]);}
     Serial.print(" bottom");
     for(int i = 0 ; i < amount_of_cell_info ; i++ ) {Serial.println(ReadFromBottomMessage[i]);}
+    Serial.print(" top");
+    for(int i = 0 ; i < amount_of_cell_info ; i++ ) {Serial.println(ReadFromTopMessage[i]);}
 
+    
     // update the cell state part... 
     float sumA1[neural_network_parameter] = {0,0,0,0,0,0};
   
@@ -832,16 +870,9 @@ void update_message()
           int k = i*neural_network_parameter + j;
           sumA1[j] += (pgm_read_float_near(&perceive_kernel_left[0][0] + k) *  ReadFromLeftMessage[i]) ; }}
 
-    
-
     for(int j = 0 ; j < neural_network_parameter ; j++ ) {sumA1[j] += (pgm_read_float_near(&perceive_bias[0] + j));}
     
-
-    
-    
     for(int j = 0 ; j < neural_network_parameter ; j++ ) {if(sumA1[j]<0){sumA1[j]=0;}}
-    
-    
 
 
     float sumB[neural_network_parameter] = {0,0,0,0,0,0};
@@ -861,8 +892,7 @@ void update_message()
       }
     }
     
-
-
+  
   float sumC[amount_of_cell_info] = {0,0,0,0,0,0,0,0,0,0,0};
 
   for(int j = 0 ; j< amount_of_cell_info ; j++ ) {        
@@ -877,7 +907,19 @@ void update_message()
   for(int j = 0 ; j < amount_of_cell_info ; j++ ) {sumC[j] += (pgm_read_float_near(&dmodel_bias_2[0] + j));}
   
 
-  for(int j = 0 ; j < amount_of_cell_info ; j++ ) {cell_state[j] += sumC[j]; Serial.print(cell_state[j]);}
+  for(int j = 0 ; j < amount_of_cell_info ; j++ ) {cell_state[j] += sumC[j];}
+
+  
+
+  for(int j = 0 ; j < amount_of_cell_info ; j++ ) {
+    if(cell_state[j]<-10){
+      cell_state[j] =0;
+      }
+    if(cell_state[j]>10){
+      cell_state[j] = 0;
+      }
+    
+    }
 
 
   // now we find out which number the cell thinks it is...
@@ -906,7 +948,9 @@ void update_message()
   if(max_position==8){analogWrite(red_light_pin, 255); analogWrite(green_light_pin,125); analogWrite(blue_light_pin, 255);}
   if(max_position==9){analogWrite(red_light_pin, 125); analogWrite(green_light_pin,255); analogWrite(blue_light_pin, 255);}
 
-
+  
+  Serial.println("I think the cell is ...");
+  Serial.println(max_position);
 
   // the update process is now completed - update each of the necessary parameters / reset the triggers...
   message_process_completed = 0;
@@ -916,12 +960,7 @@ void update_message()
   right_read = 0;
   ready_to_update = 0;
   update_num = update_num +1;
-  for(int i=1; i<amount_of_cell_info; i++){
-    ReadFromRightMessage[i] = 0;
-    ReadFromTopMessage[i] = 0;
-    ReadFromBottomMessage[i] = 0;
-    ReadFromLeftMessage[i] = 0;
-    }
+
   
   }
 
