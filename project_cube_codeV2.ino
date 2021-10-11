@@ -743,6 +743,19 @@ void send_message()
         
       }
     }
+    float data_check = 0;
+    for (int k = 0; k < amount_of_cell_info; k++){
+      data_check = data_check +cell_state[k];
+    }
+
+    float2byte.floatvar = data_check;    
+    for(byte b=0; b<4; b++){
+        Serial1.write(float2byte.bytevar[b]);
+        Serial2.write(float2byte.bytevar[b]);
+        Serial3.write(float2byte.bytevar[b]);
+        Serial4.write(float2byte.bytevar[b]);
+        
+      }
 
     // set message sent trigger - actually this might be obsolete now ...
     message_sent = 1;}
@@ -765,7 +778,7 @@ int receive_neighbour_123(HardwareSerial& neighbour_serial, float* message, int 
 {
   ///////////////////////////////Read message !!!!!////////////////////////////////////
   // We are constantly checking for send data from each of the neighbours - also only read once per update  
-  if(neighbour_serial.available()>60){
+  if(neighbour_serial.available()>64){
     int value = neighbour_serial.read(); // check for the header value - only start recording when you read this value
     if(value == 25){
       // if the header value is read, read the next 11 numbers, which is the neighbouring cell state.N.B. this needs to be converted back into 
@@ -777,29 +790,44 @@ int receive_neighbour_123(HardwareSerial& neighbour_serial, float* message, int 
              float2byte.bytevar[b] = temp;
           }         
           message[i] = float2byte.floatvar;
-          if(message[i]>2 or message[i]<-2){
-            Serial.println("ERROR 2: NUMBER MISREAD FROM HARDWARE SERIAL");
-            Serial.print(message[i]);
-            }         
+                  
         }
 
       }
+      if(neighbour_serial.available()>3){
+          for(byte b=0; b<4; b++){
+             byte temp = (neighbour_serial.read()); 
+             float2byte.bytevar[b] = temp;
+          } 
+      }
+      float recieved_message = float2byte.floatvar;
+      float check_message = 0;
+      for(int i = 0; i < amount_of_cell_info; i++){
+          check_message = check_message + message[i];
+      }
       // set bottom read to one, this neighbour has now been read
+      Serial.println("checked");
+      Serial.println(check_message);
+      Serial.println("recieved");
+      Serial.println(recieved_message);
+      if(check_message != recieved_message){
+        for(int i = 0; i < amount_of_cell_info; i++){
+          message[i] = 0;
+        }
+      }
       return 1;       
-    }
-  }
     
+  }
+  }  
   return read_signal;
 }
 
 int receive_neighbour_4(SoftwareSerial& neighbour_serial, float* message, int read_signal)
 {
   ///////////////////////////////Read message !!!!!////////////////////////////////////
-  // We are constantly checking for send data from each of the neighbours - also only read once per update 
-  
-  if(neighbour_serial.available()>60){
+  // We are constantly checking for send data from each of the neighbours - also only read once per update  
+  if(neighbour_serial.available()>64){
     int value = neighbour_serial.read(); // check for the header value - only start recording when you read this value
-    
     if(value == 25){
       // if the header value is read, read the next 11 numbers, which is the neighbouring cell state.N.B. this needs to be converted back into 
       // the neural network weight format.
@@ -809,21 +837,32 @@ int receive_neighbour_4(SoftwareSerial& neighbour_serial, float* message, int re
              byte temp = (neighbour_serial.read()); 
              float2byte.bytevar[b] = temp;
           }         
-          
           message[i] = float2byte.floatvar;
-          if(message[i]>2 or message[i]<-2){
-            Serial.println("ERROR 2: NUMBER MISREAD FROM SOFTWARE SERIAL");
-            Serial.print(message[i]/10000);
-            }
-            
+                  
         }
-    
+
+      }
+      if(neighbour_serial.available()>3){
+          for(byte b=0; b<4; b++){
+             byte temp = (neighbour_serial.read()); 
+             float2byte.bytevar[b] = temp;
+          } 
+      }
+      float recieved_message = float2byte.floatvar;
+      float check_message = 0;
+      for(int i = 0; i < amount_of_cell_info; i++){
+          check_message = check_message + message[i];
       }
       // set bottom read to one, this neighbour has now been read
+      if(check_message != recieved_message){
+        for(int i = 0; i < amount_of_cell_info; i++){
+          message[i] = 0;
+        }
+      }
       return 1;       
-    }
-  }
     
+  }
+  }  
   return read_signal;
 }
 
