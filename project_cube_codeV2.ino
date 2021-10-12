@@ -36,11 +36,11 @@ static const int green_light_pin = 10;
 static const int blue_light_pin = 3;
 
 int message_process_completed = 0;
-int bottom_read = 0;
-int right_read = 0;
-int left_read = 0;
-int top_read =0;
-int ready_to_update = 0;
+int bottom_read = -1;
+int right_read = -1;
+int left_read = -1;
+int top_read =-1;
+int ready_to_update = -1;
 
 
 union Float2Byte{
@@ -700,8 +700,7 @@ void setup() {
 }
 
 void loop() { 
-
-
+ 
   while(update_num<30){
   send_message();
   receieve_message();      
@@ -721,41 +720,37 @@ void send_message()
     message_process_completed = 1; //reset trigger
 
     // send header... at the moment its randomly 25 but we can change later if required
-    uint8_t header = 25;
-    // send header to each of the neighbours
+    int header = 245;
     Serial1.write(header);
     Serial2.write(header);
     Serial3.write(header);
     Serial4.write(header);
+      
 
     
-
+    int check_num = 0;
     for (int k = 0; k < amount_of_cell_info; k++){
     // send the current cell state to each of its neighbours
        // convert into sendable format (i.e. cell_state of -10 --> 0 cells state of +10 --> 255)
-      float x = cell_state[k];
-      float2byte.floatvar = x;
-      for(byte b=0; b<4; b++){
-        Serial1.write(float2byte.bytevar[b]);
-        Serial2.write(float2byte.bytevar[b]);
-        Serial3.write(float2byte.bytevar[b]);
-        Serial4.write(float2byte.bytevar[b]);
-        
-      }
-    }
-    float data_check = 0;
-    for (int k = 0; k < amount_of_cell_info; k++){
-      data_check = data_check +cell_state[k];
-    }
 
-    float2byte.floatvar = data_check;    
-    for(byte b=0; b<4; b++){
-        Serial1.write(float2byte.bytevar[b]);
-        Serial2.write(float2byte.bytevar[b]);
-        Serial3.write(float2byte.bytevar[b]);
-        Serial4.write(float2byte.bytevar[b]);
+      int x = cell_state[k]*63.75 + 127.5;
+      
+      check_num = check_num + x;
+
+      Serial1.write(x);
+      Serial2.write(x);
+      Serial3.write(x);
+      Serial4.write(x);
         
-      }
+      
+    }
+      Serial1.write(check_num);
+      Serial2.write(check_num);
+      Serial3.write(check_num);
+      Serial4.write(check_num);
+    
+
+
 
     // set message sent trigger - actually this might be obsolete now ...
     message_sent = 1;}
@@ -774,108 +769,104 @@ void receieve_message()
 
 }
 
-int receive_neighbour_123(HardwareSerial& neighbour_serial, float* message, int read_signal)
+int receive_neighbour_123(HardwareSerial& neighbour_serial, float* message, int flag)
 {
-  ///////////////////////////////Read message !!!!!////////////////////////////////////
-  // We are constantly checking for send data from each of the neighbours - also only read once per update  
-  if(neighbour_serial.available()>64){
-    int value = neighbour_serial.read(); // check for the header value - only start recording when you read this value
-    if(value == 25){
-      // if the header value is read, read the next 11 numbers, which is the neighbouring cell state.N.B. this needs to be converted back into 
-      // the neural network weight format.
-      for(int i = 0; i < amount_of_cell_info; i++){
-        if(neighbour_serial.available()>3){
-          for(byte b=0; b<4; b++){
-             byte temp = (neighbour_serial.read()); 
-             float2byte.bytevar[b] = temp;
-          }         
-          message[i] = float2byte.floatvar;
-                  
+  if(flag>14){
+    if(flag==15){
+      if(neighbour_serial.available()>0){
+        int temp = (neighbour_serial.read());
+        float recieved_sum = (float(temp)-float(127.5))/float(63.75);
+        float check_sum = 0;
+        for(int k=0;k<15;k++){
+          check_sum = check_sum + message[k];
         }
 
+        flag = flag +1;
       }
-      if(neighbour_serial.available()>3){
-          for(byte b=0; b<4; b++){
-             byte temp = (neighbour_serial.read()); 
-             float2byte.bytevar[b] = temp;
-          } 
+    }
+    return flag;
+  }
+  if(flag<0){
+    
+    if(neighbour_serial.available()>0){
+
+      int value = (neighbour_serial.read()); 
+      if(value == 245){
+        flag = 0;  
       }
-      float recieved_message = float2byte.floatvar;
-      float check_message = 0;
-      for(int i = 0; i < amount_of_cell_info; i++){
-          check_message = check_message + message[i];
-      }
-      // set bottom read to one, this neighbour has now been read
-      Serial.println("checked");
-      Serial.println(check_message);
-      Serial.println("recieved");
-      Serial.println(recieved_message);
-      if(check_message != recieved_message){
-        for(int i = 0; i < amount_of_cell_info; i++){
-          message[i] = 0;
-        }
-      }
-      return 1;       
+    }
+  }
+  else{
+    while(neighbour_serial.available()>0 and flag<15){
+      
+      int temp = (neighbour_serial.read()); 
+
+      message[flag] = (float(temp)-float(127.5))/float(63.75);
+      flag = flag +1;
+      
+    }
     
   }
-  }  
-  return read_signal;
+  return flag;
 }
 
-int receive_neighbour_4(SoftwareSerial& neighbour_serial, float* message, int read_signal)
+int receive_neighbour_4(SoftwareSerial& neighbour_serial, float* message, int flag)
 {
-  ///////////////////////////////Read message !!!!!////////////////////////////////////
-  // We are constantly checking for send data from each of the neighbours - also only read once per update  
-  if(neighbour_serial.available()>64){
-    int value = neighbour_serial.read(); // check for the header value - only start recording when you read this value
-    if(value == 25){
-      // if the header value is read, read the next 11 numbers, which is the neighbouring cell state.N.B. this needs to be converted back into 
-      // the neural network weight format.
-      for(int i = 0; i < amount_of_cell_info; i++){
-        if(neighbour_serial.available()>3){
-          for(byte b=0; b<4; b++){
-             byte temp = (neighbour_serial.read()); 
-             float2byte.bytevar[b] = temp;
-          }         
-          message[i] = float2byte.floatvar;
-                  
+  if(flag>14){
+    if(flag==15){
+      if(neighbour_serial.available()>0){
+        int temp = (neighbour_serial.read());
+        float recieved_sum = (float(temp)-float(127.5))/float(63.75);
+        float check_sum = 0;
+        for(int k=0;k<15;k++){
+          check_sum = check_sum + message[k];
         }
+        flag = flag +1;
+      }
+    }
+    return flag;
+  }
+  if(flag<0){
+    
+    if(neighbour_serial.available()>0){
 
+      int value = (neighbour_serial.read()); 
+      if(value == 245){
+        flag = 0;  
       }
-      if(neighbour_serial.available()>3){
-          for(byte b=0; b<4; b++){
-             byte temp = (neighbour_serial.read()); 
-             float2byte.bytevar[b] = temp;
-          } 
-      }
-      float recieved_message = float2byte.floatvar;
-      float check_message = 0;
-      for(int i = 0; i < amount_of_cell_info; i++){
-          check_message = check_message + message[i];
-      }
-      // set bottom read to one, this neighbour has now been read
-      if(check_message != recieved_message){
-        for(int i = 0; i < amount_of_cell_info; i++){
-          message[i] = 0;
-        }
-      }
-      return 1;       
+    }
+  }
+  else{
+    while(neighbour_serial.available()>0 and flag<15){
+      
+      int temp = (neighbour_serial.read()); 
+
+      message[flag] = (float(temp)-float(127.5))/float(63.75);
+      flag = flag +1;
+      
+    }
     
   }
-  }  
-  return read_signal;
+  return flag;
 }
-
 void update_message()
 {
 ////////////////////////// Update message ///////////////////////////////////////////
 
   now = millis();
   check = now - prev;
+
+  int top_message = 0;
+  int bottom_message = 0;
+  int left_message = 0;
+  int right_message = 0;
+  
+  if(top_read < 15){top_message = 1;} 
+  if(bottom_read < 15){bottom_message = 1;} 
+  if(left_read < 15){left_message = 1;} 
+  if(right_read < 15){right_message = 1;} 
    
-
-  int messages_recieved = bottom_read + top_read + left_read + right_read;
-
+  int messages_recieved = top_message + right_message + left_message + bottom_message;
   
 
   if(check>math_trigger and messages_recieved>0){
@@ -883,6 +874,10 @@ void update_message()
     prev = now;
 
     
+    Serial.println("check");
+    Serial.println(check);
+    Serial.println("prev");
+    Serial.println(prev);
     
     analogWrite(red_light_pin, 0); analogWrite(green_light_pin,0); analogWrite(blue_light_pin, 0);
 
@@ -1041,15 +1036,17 @@ void update_message()
 
   // the update process is now completed - update each of the necessary parameters / reset the triggers...
   message_process_completed = 0;
-  bottom_read = 0;
-  top_read = 0;
-  left_read = 0;
-  right_read = 0;
+  bottom_read = -1;
+  top_read = -1;
+  left_read = -1;
+  right_read = -1;
 
-  ReadFromRightMessage[15] = {0};
-  ReadFromLeftMessage[15] = {0};
-  ReadFromTopMessage[15] = {0};
-  ReadFromBottomMessage[15] = {0};
+  bottom_message = 0;
+  top_message = 0;
+  left_message = 0;
+  right_message = 0;
+
+
   update_num = update_num +1;
   
 
