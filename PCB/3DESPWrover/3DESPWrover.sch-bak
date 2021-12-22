@@ -20,7 +20,7 @@ P 1700 2250
 F 0 "U1" H 1700 3631 50  0000 C CNN
 F 1 "ESP32-S2-WROVER" H 1700 3540 50  0000 C CNN
 F 2 "RF_Module:ESP32-S2-WROVER" H 2450 1100 50  0001 C CNN
-F 3 "https://www.espressif.com/sites/default/files/documentation/esp32-s2-wroom_esp32-s2-wroom-i_datasheet_en.pdf" H 1400 1450 50  0001 C CNN
+F 3 "https://www.espressif.com/sites/default/files/documentation/esp32-s2-wrover_esp32-s2-wrover-i_datasheet_en.pdf" H 1400 1450 50  0001 C CNN
 	1    1700 2250
 	1    0    0    -1  
 $EndComp
@@ -103,7 +103,7 @@ Wire Wire Line
 Wire Wire Line
 	1100 3050 750  3050
 Wire Wire Line
-	1100 3150 750  3150
+	1100 3150 950  3150
 $Comp
 L power:GND #PWR01
 U 1 1 61BA461D
@@ -392,6 +392,7 @@ F 0 "C9" H 9815 2046 50  0000 L CNN
 F 1 "22u" H 9815 1955 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 9738 1850 50  0001 C CNN
 F 3 "~" H 9700 2000 50  0001 C CNN
+F 4 "10V" H 9700 2000 50  0000 C CNN "Voltage"
 	1    9700 2000
 	1    0    0    -1  
 $EndComp
@@ -403,6 +404,7 @@ F 0 "C10" H 10465 2046 50  0000 L CNN
 F 1 "22u" H 10465 1955 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 10388 1850 50  0001 C CNN
 F 3 "~" H 10350 2000 50  0001 C CNN
+F 4 "10V" H 10350 2000 50  0000 C CNN "Voltage"
 	1    10350 2000
 	1    0    0    -1  
 $EndComp
@@ -414,6 +416,7 @@ F 0 "C11" H 11065 2046 50  0000 L CNN
 F 1 "10u" H 11065 1955 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 10988 1850 50  0001 C CNN
 F 3 "~" H 10950 2000 50  0001 C CNN
+F 4 "50V" H 10950 2000 50  0000 C CNN "Voltage"
 	1    10950 2000
 	1    0    0    -1  
 $EndComp
@@ -461,10 +464,10 @@ F 3 "~" H 10000 1700 50  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 Wire Wire Line
-	9700 1700 9850 1700
+	9700 1700 9800 1700
 Connection ~ 9700 1700
 Wire Wire Line
-	10150 1700 10350 1700
+	10150 1700 10250 1700
 Text Label 9450 1700 0    50   ~ 0
 Vout
 $Comp
@@ -489,7 +492,7 @@ Vin
 Text Notes 3100 850  0    50   ~ 0
 ESP32-S2 WROVER\nModule
 Text Notes 9750 700  0    50   ~ 0
-K78L03-500R3 DC-DC Converter\nVin: 4.75-36V
+K78L03-500R3 DC-DC Converter\nVin: 4.75-30V
 $Comp
 L power:+3.3V #PWR024
 U 1 1 61BEF10A
@@ -784,17 +787,17 @@ Wire Wire Line
 $Comp
 L power:GND #PWR032
 U 1 1 61B89D63
-P 7300 3900
-F 0 "#PWR032" H 7300 3650 50  0001 C CNN
-F 1 "GND" H 7305 3727 50  0000 C CNN
-F 2 "" H 7300 3900 50  0001 C CNN
-F 3 "" H 7300 3900 50  0001 C CNN
-	1    7300 3900
+P 7100 2950
+F 0 "#PWR032" H 7100 2700 50  0001 C CNN
+F 1 "GND" H 7105 2777 50  0000 C CNN
+F 2 "" H 7100 2950 50  0001 C CNN
+F 3 "" H 7100 2950 50  0001 C CNN
+	1    7100 2950
 	1    0    0    -1  
 $EndComp
 Text Label 6550 3550 0    50   ~ 0
 D5
-Text Label 6550 3450 0    50   ~ 0
+Text Label 5700 3550 0    50   ~ 0
 D6
 Text Label 7350 3350 0    50   ~ 0
 D7
@@ -823,7 +826,7 @@ Wire Wire Line
 	5600 3250 5600 3450
 Wire Wire Line
 	5600 3450 5850 3450
-Text Label 8350 3100 0    50   ~ 0
+Text Label 8300 3850 0    50   ~ 0
 Vin
 Text Label 5600 3250 0    50   ~ 0
 Vin
@@ -877,21 +880,6 @@ F 3 "~" H 6050 3550 50  0001 C CNN
 	1    6050 3550
 	1    0    0    -1  
 $EndComp
-$Comp
-L power:GND #PWR014
-U 1 1 61BB5847
-P 5600 3750
-F 0 "#PWR014" H 5600 3500 50  0001 C CNN
-F 1 "GND" H 5605 3577 50  0000 C CNN
-F 2 "" H 5600 3750 50  0001 C CNN
-F 3 "" H 5600 3750 50  0001 C CNN
-	1    5600 3750
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	5850 3650 5600 3650
-Wire Wire Line
-	5600 3650 5600 3750
 Wire Wire Line
 	6350 3650 6600 3650
 Wire Wire Line
@@ -910,36 +898,28 @@ $EndComp
 $Comp
 L power:GND #PWR017
 U 1 1 61BD56E4
-P 8300 3900
-F 0 "#PWR017" H 8300 3650 50  0001 C CNN
-F 1 "GND" H 8305 3727 50  0000 C CNN
-F 2 "" H 8300 3900 50  0001 C CNN
-F 3 "" H 8300 3900 50  0001 C CNN
-	1    8300 3900
+P 8550 2950
+F 0 "#PWR017" H 8550 2700 50  0001 C CNN
+F 1 "GND" H 8555 2777 50  0000 C CNN
+F 2 "" H 8550 2950 50  0001 C CNN
+F 3 "" H 8550 2950 50  0001 C CNN
+	1    8550 2950
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
 	8100 3850 8300 3850
 Wire Wire Line
-	8300 3850 8300 3900
-Wire Wire Line
 	7600 3850 7300 3850
-Wire Wire Line
-	7300 3850 7300 3900
 Text Label 8350 3450 0    50   ~ 0
 D10
 Wire Wire Line
 	8100 3450 8350 3450
-Text Label 7300 3100 0    50   ~ 0
+Text Label 7300 3850 0    50   ~ 0
 Vin
 Wire Wire Line
 	8100 3250 8350 3250
 Wire Wire Line
-	8350 3250 8350 3100
-Wire Wire Line
 	7600 3250 7300 3250
-Wire Wire Line
-	7300 3250 7300 3100
 Wire Wire Line
 	7600 3750 7350 3750
 Wire Wire Line
@@ -951,10 +931,87 @@ Wire Wire Line
 Wire Wire Line
 	7600 3350 7350 3350
 Wire Wire Line
-	6350 3450 6550 3450
+	8350 2950 8550 2950
 Wire Wire Line
-	5850 3550 5600 3550
+	8350 2950 8350 3250
 Wire Wire Line
-	5600 3550 5600 3450
+	7300 2950 7100 2950
+Wire Wire Line
+	7300 2950 7300 3250
+$Comp
+L Device:R R4
+U 1 1 61C33742
+P 950 3550
+F 0 "R4" H 1020 3596 50  0000 L CNN
+F 1 "10k" H 1020 3505 50  0000 L CNN
+F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" V 880 3550 50  0001 C CNN
+F 3 "~" H 950 3550 50  0001 C CNN
+	1    950  3550
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	950  3400 950  3150
+Connection ~ 950  3150
+Wire Wire Line
+	950  3150 750  3150
+$Comp
+L power:+3.3V #PWR029
+U 1 1 61C379CF
+P 750 3800
+F 0 "#PWR029" H 750 3650 50  0001 C CNN
+F 1 "+3.3V" H 765 3973 50  0000 C CNN
+F 2 "" H 750 3800 50  0001 C CNN
+F 3 "" H 750 3800 50  0001 C CNN
+	1    750  3800
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	950  3700 950  3900
+Wire Wire Line
+	950  3900 750  3900
+Wire Wire Line
+	750  3900 750  3800
+$Comp
+L Device:Net-Tie_2 NT1
+U 1 1 61C3CDD7
+P 10050 1400
+F 0 "NT1" H 10050 1581 50  0000 C CNN
+F 1 "Net-Tie_2" H 10050 1490 50  0000 C CNN
+F 2 "" H 10050 1400 50  0001 C CNN
+F 3 "~" H 10050 1400 50  0001 C CNN
+	1    10050 1400
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9950 1400 9850 1400
+Wire Wire Line
+	9850 1400 9850 1550
+Wire Wire Line
+	9850 1550 9800 1550
+Wire Wire Line
+	9800 1550 9800 1700
+Connection ~ 9800 1700
+Wire Wire Line
+	9800 1700 9850 1700
+Wire Wire Line
+	10150 1400 10250 1400
+Wire Wire Line
+	10250 1400 10250 1700
+Connection ~ 10250 1700
+Wire Wire Line
+	10250 1700 10350 1700
+Wire Wire Line
+	5850 3650 5600 3650
+Wire Wire Line
+	5600 3650 5600 3450
 Connection ~ 5600 3450
+Wire Wire Line
+	5850 3550 5700 3550
+Wire Wire Line
+	6350 3450 6750 3450
+Wire Wire Line
+	6750 3450 6750 3650
+Wire Wire Line
+	6750 3650 6600 3650
+Connection ~ 6600 3650
 $EndSCHEMATC
