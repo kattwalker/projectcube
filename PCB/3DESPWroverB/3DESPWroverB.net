@@ -1,7 +1,7 @@
 (export (version D)
   (design
-    (source C:\Users\golde\git\cube\3DESPWroverB\3DESPWroverB.sch)
-    (date "12/22/2021 9:34:54 PM")
+    (source C:\Users\rodr\git\cube\3DESPWroverB\3DESPWroverB.sch)
+    (date "20-05-2022 09:40:12")
     (tool "Eeschema (5.1.10)-1")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -17,7 +17,7 @@
   (components
     (comp (ref J1)
       (value Conn_02x07_Odd_Even)
-      (footprint Custom:TE_Micromatch_2,54_14)
+      (footprint Custom:TE_Micromatch_2,54_14_SMD)
       (datasheet ~)
       (libsource (lib Connector_Generic) (part Conn_02x07_Odd_Even) (description "Generic connector, double row, 02x07, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)"))
       (sheetpath (names /) (tstamps /))
