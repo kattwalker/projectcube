@@ -1,4 +1,4 @@
-19247072802717319
+19251991838119842
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin Battery Holder, BX0036, Battery Type C (https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -83173,3 +83173,24 @@ varistor SIOV
 0
 2
 2
+micro-MaTch
+0-188275-4_SMD_4-pin_female
+./Docs/ENG_CD_188275_S3_c-188275_drw.pdf
+micro-MaTch, SMD, 4-pin, female
+0
+4
+4
+micro-MaTch
+0-188275-4_SMD_4-pin_female_split-pads
+./Docs/ENG_CD_188275_S3_c-188275_drw.pdf
+micro-MaTch, SMD, 4-pin, female
+0
+24
+4
+micro-MaTch
+0-215464-4_TH_4-pin_male
+./Docs/ENG_CD_215464_N_215464-c_drw.pdf
+micro-MaTch, TH, 4-pin, male
+0
+4
+4
