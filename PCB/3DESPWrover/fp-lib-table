@@ -1,4 +1,0 @@
-(fp_lib_table
-  (lib (name Custom)(type KiCad)(uri ${KIPRJMOD}/Custom.pretty)(options "")(descr ""))
-  (lib (name micro-MaTch)(type KiCad)(uri C:/Users/rodr/git/projectcube/PCB/3DESPWrover/micro-MaTch.pretty-master/micro-MaTch.pretty-master)(options "")(descr ""))
-)
